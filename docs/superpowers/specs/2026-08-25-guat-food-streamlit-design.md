@@ -127,7 +127,7 @@ guat delicious/
 
 首次启动（`user` 表为空）时自动写入：
 
-- 用户：`admin`（ADMIN）+ `zhangsan`/`lisi`/`wangwu`/`zhaoliu`/`sunqi`（USER）
+- 用户：`guihanxiaoxiaol`（ADMIN）+ `zhangsan`/`lisi`/`wangwu`/`zhaoliu`/`sunqi`（USER）
 - 食堂：天舟楼食堂（南校区）、天宫楼食堂（北校区）、莘子苑食堂（东校区）、校外（商业街）
 - 档口：桂林米粉、柳州螺蛳粉、自选快餐、麻辣香锅、黄焖鸡米饭、兰州拉面、烤肉拌饭、石锅拌饭、港式烧腊、糖水铺
 - 菜品：桂林米粉、卤菜粉、招牌螺蛳粉、干捞螺蛳粉、两荤一素套餐、麻辣香锅(自选)、黄焖鸡米饭、牛肉拉面、蜜汁烤肉饭、五花肉石锅拌饭、叉烧饭、杨枝甘露
@@ -135,7 +135,7 @@ guat delicious/
 
 ## 11. 关键默认决策（已确认）
 
-1. 演示账号**统一密码固定为 `123456`**（本地演示方便）。
+1. 种子密码**不写入仓库**，通过环境变量 `ADMIN_PASSWORD` / `DEMO_PASSWORD` 或 `.streamlit/secrets.toml` 配置（本地演示可自行固定）。
 2. 图片存本地 `uploads/`，路径入库。
 3. 数据库用**裸 `sqlite3` + SQL**，不引 ORM。
 

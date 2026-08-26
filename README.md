@@ -46,12 +46,26 @@ streamlit run app.py
 
 ### 演示账号
 
-管理员账号 `guihanxiaoxiaol` / 密码 `lds666666`；其余演示用户统一密码 `123456`（可分别用环境变量 `ADMIN_PASSWORD` / `DEMO_PASSWORD` 覆盖）：
+管理员账号 `guihanxiaoxiaol`；其余演示用户 `zhangsan` / `lisi` / `wangwu` / `zhaoliu` / `sunqi` 共用一个密码。密码**不写入仓库**，通过环境变量或 `.streamlit/secrets.toml` 配置（见下方「密码配置」）：
 
 | 账号 | 角色 |
 |---|---|
 | `guihanxiaoxiaol` | 管理员 |
 | `zhangsan` / `lisi` / `wangwu` / `zhaoliu` / `sunqi` | 普通用户 |
+
+### 密码配置
+
+种子密码不写入仓库，按优先级读取：
+
+1. 环境变量 `ADMIN_PASSWORD` / `DEMO_PASSWORD`
+2. 本地文件 `.streamlit/secrets.toml`（已加入 `.gitignore`，格式见 `.streamlit/secrets.toml.example`）
+
+均未配置时，首次启动会生成随机密码并打印到终端。想固定密码，复制示例文件为 `.streamlit/secrets.toml` 并填入：
+
+```toml
+ADMIN_PASSWORD = "你的管理员密码"
+DEMO_PASSWORD = "你的演示用户密码"
+```
 
 ## 排行榜算法
 

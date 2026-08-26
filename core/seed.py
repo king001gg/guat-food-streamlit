@@ -1,16 +1,39 @@
 """首次启动种子数据：演示账号 / 食堂 / 档口 / 菜品 / 评分 / 点赞 / 收藏。
 
 数据沿用参考项目（guat-food-recommendations）的 DataInitializer。
+种子密码不写死在仓库中：优先读环境变量，其次读本地 .streamlit/secrets.toml。
 """
 from __future__ import annotations
 
 import os
+import secrets as _secrets
+import tomllib
 
 from core import db
 from core.auth import hash_password
 
-DEMO_PASSWORD = os.environ.get("DEMO_PASSWORD", "123456")
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "lds666666")
+_SECRETS_PATH = db.ROOT / ".streamlit" / "secrets.toml"
+
+
+def _load_secrets() -> dict:
+    """读取本地 .streamlit/secrets.toml（TOML，已 gitignore），失败返回空。"""
+    if not _SECRETS_PATH.exists():
+        return {}
+    try:
+        with open(_SECRETS_PATH, "rb") as f:
+            return tomllib.load(f)
+    except (OSError, tomllib.TOMLDecodeError):
+        return {}
+
+
+def _resolve_password(env_key: str, secrets: dict) -> str:
+    """优先环境变量，其次 secrets.toml；都未配置则生成随机密码并打印提示。"""
+    pwd = os.environ.get(env_key) or secrets.get(env_key)
+    if pwd:
+        return str(pwd)
+    random_pw = _secrets.token_urlsafe(9)
+    print(f"[seed] {env_key} not set, generated random password: {random_pw}")
+    return random_pw
 
 _USERS = [
     ("guihanxiaoxiaol", "管理员", "ADMIN"),
@@ -154,8 +177,9 @@ def seed_if_empty() -> None:
 
 
 def _seed() -> None:
-    hashed_demo = hash_password(DEMO_PASSWORD)
-    hashed_admin = hash_password(ADMIN_PASSWORD)
+    secrets = _load_secrets()
+    hashed_demo = hash_password(_resolve_password("DEMO_PASSWORD", secrets))
+    hashed_admin = hash_password(_resolve_password("ADMIN_PASSWORD", secrets))
 
     # 用户/食堂：幂等插入（避免与已注册用户或已存在食堂冲突），随后按名称回查 id
     for username, nickname, role in _USERS:

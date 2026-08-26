@@ -46,11 +46,11 @@ streamlit run app.py
 
 ### 演示账号
 
-所有演示账号统一密码为 `123456`（可用环境变量 `DEMO_PASSWORD` 覆盖）：
+管理员账号 `guihanxiaoxiaol` / 密码 `lds666666`；其余演示用户统一密码 `123456`（可分别用环境变量 `ADMIN_PASSWORD` / `DEMO_PASSWORD` 覆盖）：
 
 | 账号 | 角色 |
 |---|---|
-| `admin` | 管理员 |
+| `guihanxiaoxiaol` | 管理员 |
 | `zhangsan` / `lisi` / `wangwu` / `zhaoliu` / `sunqi` | 普通用户 |
 
 ## 排行榜算法

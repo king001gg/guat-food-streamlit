@@ -10,9 +10,10 @@ from core import db
 from core.auth import hash_password
 
 DEMO_PASSWORD = os.environ.get("DEMO_PASSWORD", "123456")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "lds666666")
 
 _USERS = [
-    ("admin", "管理员", "ADMIN"),
+    ("guihanxiaoxiaol", "管理员", "ADMIN"),
     ("zhangsan", "张三", "USER"),
     ("lisi", "李四", "USER"),
     ("wangwu", "王五", "USER"),
@@ -153,10 +154,12 @@ def seed_if_empty() -> None:
 
 
 def _seed() -> None:
-    hashed = hash_password(DEMO_PASSWORD)
+    hashed_demo = hash_password(DEMO_PASSWORD)
+    hashed_admin = hash_password(ADMIN_PASSWORD)
 
     # 用户/食堂：幂等插入（避免与已注册用户或已存在食堂冲突），随后按名称回查 id
     for username, nickname, role in _USERS:
+        hashed = hashed_admin if role == "ADMIN" else hashed_demo
         db.execute(
             "INSERT OR IGNORE INTO user (username, password, nickname, role, status) "
             "VALUES (?, ?, ?, ?, 'ACTIVE')",

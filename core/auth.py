@@ -21,8 +21,28 @@ def verify_password(password: str, hashed: str) -> bool:
         return False
 
 
+def _normalize_input(s: str) -> str:
+    """归一化输入：去除首尾空白，并把全角 ASCII 转为半角。
+
+    中文输入法常在数字/字母上误用全角（如 ６、ｌ），导致登录失败；
+    登录与注册统一归一化，避免这类「看着一样、字节不同」的输入问题。
+    """
+    s = (s or "").strip()
+    out = []
+    for ch in s:
+        cp = ord(ch)
+        if cp == 0x3000:  # 全角空格 -> 半角空格
+            out.append(" ")
+        elif 0xFF01 <= cp <= 0xFF5E:  # 全角 ASCII -> 半角
+            out.append(chr(cp - 0xFEE0))
+        else:
+            out.append(ch)
+    return "".join(out)
+
+
 def register_user(username: str, password: str, nickname: str) -> tuple[bool, str]:
-    username = (username or "").strip()
+    username = _normalize_input(username)
+    password = _normalize_input(password)
     nickname = (nickname or "").strip() or username
     if not USERNAME_RE.fullmatch(username):
         return False, "用户名需为 3-20 位字母、数字或下划线"
@@ -42,8 +62,10 @@ def register_user(username: str, password: str, nickname: str) -> tuple[bool, st
 
 
 def authenticate(username: str, password: str) -> tuple[dict | None, str]:
-    user = db.query_one("SELECT * FROM user WHERE username = ?", ((username or "").strip(),))
-    if not user or not verify_password(password or "", user["password"]):
+    username = _normalize_input(username)
+    password = _normalize_input(password)
+    user = db.query_one("SELECT * FROM user WHERE username = ?", (username,))
+    if not user or not verify_password(password, user["password"]):
         return None, "用户名或密码错误"
     if user["status"] != "ACTIVE":
         return None, "账号已被禁用"

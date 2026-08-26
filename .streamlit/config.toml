@@ -1,0 +1,10 @@
+[theme]
+base = "dark"
+primaryColor = "#1e5aa8"
+linkColor = "#4da3ff"
+backgroundColor = "#0b1e3a"
+secondaryBackgroundColor = "#133a6f"
+textColor = "#e6eefb"
+borderColor = "#2a4a7f"
+
+chartCategoricalColors = ["#4da3ff", "#ff9f43", "#f6b93b", "#3ddc97", "#e74c3c", "#9ecbff", "#8b5cf6", "#14b8a6"]

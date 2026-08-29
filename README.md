@@ -58,9 +58,13 @@ streamlit run app.py
 种子密码不写入仓库，按优先级读取：
 
 1. 环境变量 `ADMIN_PASSWORD` / `DEMO_PASSWORD`
-2. 本地文件 `.streamlit/secrets.toml`（已加入 `.gitignore`，格式见 `.streamlit/secrets.toml.example`）
+2. Streamlit Secrets（本地 `.streamlit/secrets.toml`；Streamlit Cloud 在 App → ⋮ → Settings → Secrets 里配置同名 TOML）
+3. 均未配置时，首次启动生成随机密码并打印到终端
 
-均未配置时，首次启动会生成随机密码并打印到终端。想固定密码，复制示例文件为 `.streamlit/secrets.toml` 并填入：
+想固定密码：
+
+- 本地：复制 `.streamlit/secrets.toml.example` 为 `.streamlit/secrets.toml` 并填入
+- 云端：在 Streamlit Cloud 的 Secrets 里添加同名 TOML
 
 ```toml
 ADMIN_PASSWORD = "你的管理员密码"

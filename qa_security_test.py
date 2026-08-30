@@ -50,7 +50,7 @@ def ok(x, msg=""):
 
 # ---------------- 归一化单元 ----------------
 def _t_norm_halfwidth():
-    eq(auth._normalize_input("ｌｄｓ６６６６６６"), "lds666666", "全角字母数字应转半角")
+    eq(auth._normalize_input("ｔｅｓｔ１２３"), "test123", "全角字母数字应转半角")
     eq(auth._normalize_input("guihanxiaoxiaol"), "guihanxiaoxiaol", "半角应原样返回")
     eq(auth._normalize_input("ｇｕｉｈａｎｘｉａｏｘｉａｏｌ"), "guihanxiaoxiaol", "全角用户名应转半角")
 

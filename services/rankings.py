@@ -41,6 +41,10 @@ LEFT JOIN like_record l ON l.target_type = 'DISH' AND l.target_id = d.id
 LEFT JOIN favorite f ON f.target_type = 'DISH' AND f.target_id = d.id
 """
 
+# PostgreSQL 要求 GROUP BY 列出所有非聚合列（SQLite 允许裸列），这里显式展开以便双后端共用。
+_WINDOW_GROUP = "w.id, w.name, w.canteen_id, w.description, w.cover_image, w.location, w.status, w.view_count, c.name"
+_DISH_GROUP = "d.id, d.name, d.window_id, d.description, d.image, d.price, d.status, d.view_count, w.name, c.id, c.name"
+
 
 def _postprocess(rows: list[dict]) -> list[dict]:
     for r in rows:
@@ -76,7 +80,7 @@ def get_rankings(
         if keyword:
             where.append("(w.name LIKE ? OR w.description LIKE ?)")
             params += [f"%{keyword}%", f"%{keyword}%"]
-        group = "w.id"
+        group = _WINDOW_GROUP
     else:
         sql = _DISH_SELECT
         where = ["d.status = 'PUBLISHED'"]
@@ -90,7 +94,7 @@ def get_rankings(
         if keyword:
             where.append("(d.name LIKE ? OR d.description LIKE ?)")
             params += [f"%{keyword}%", f"%{keyword}%"]
-        group = "d.id"
+        group = _DISH_GROUP
 
     sql = sql + " WHERE " + " AND ".join(where) + f" GROUP BY {group}"
     rows = _postprocess(db.query(sql, tuple(params)))
@@ -98,10 +102,10 @@ def get_rankings(
 
 
 def get_window_row(window_id: int) -> dict | None:
-    rows = db.query(_WINDOW_SELECT + " WHERE w.id = ? GROUP BY w.id", (window_id,))
+    rows = db.query(_WINDOW_SELECT + " WHERE w.id = ? GROUP BY " + _WINDOW_GROUP, (window_id,))
     return _postprocess(rows)[0] if rows else None
 
 
 def get_dish_row(dish_id: int) -> dict | None:
-    rows = db.query(_DISH_SELECT + " WHERE d.id = ? GROUP BY d.id", (dish_id,))
+    rows = db.query(_DISH_SELECT + " WHERE d.id = ? GROUP BY " + _DISH_GROUP, (dish_id,))
     return _postprocess(rows)[0] if rows else None

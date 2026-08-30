@@ -185,15 +185,15 @@ def _seed() -> None:
     for username, nickname, role in _USERS:
         hashed = hashed_admin if role == "ADMIN" else hashed_demo
         db.execute(
-            "INSERT OR IGNORE INTO user (username, password, nickname, role, status) "
-            "VALUES (?, ?, ?, ?, 'ACTIVE')",
+            "INSERT INTO user (username, password, nickname, role, status) "
+            "VALUES (?, ?, ?, ?, 'ACTIVE') ON CONFLICT DO NOTHING",
             (username, hashed, nickname, role),
         )
     user_ids = {u["username"]: u["id"] for u in db.query("SELECT id, username FROM user")}
 
     for name, location, sort_order in _CANTEENS:
         db.execute(
-            "INSERT OR IGNORE INTO canteen (name, location, sort_order) VALUES (?, ?, ?)",
+            "INSERT INTO canteen (name, location, sort_order) VALUES (?, ?, ?) ON CONFLICT DO NOTHING",
             (name, location, sort_order),
         )
     canteen_id_of = {c["name"]: c["id"] for c in db.query("SELECT id, name FROM canteen")}

@@ -53,23 +53,30 @@ streamlit run app.py
 | `guihanxiaoxiaol` | 管理员 |
 | `zhangsan` / `lisi` / `wangwu` / `zhaoliu` / `sunqi` | 普通用户 |
 
-### 密码配置
+### 配置
 
-种子密码不写入仓库，按优先级读取：
-
-1. 环境变量 `ADMIN_PASSWORD` / `DEMO_PASSWORD`
-2. Streamlit Secrets（本地 `.streamlit/secrets.toml`；Streamlit Cloud 在 App → ⋮ → Settings → Secrets 里配置同名 TOML）
-3. 均未配置时，首次启动生成随机密码并打印到终端
-
-想固定密码：
-
-- 本地：复制 `.streamlit/secrets.toml.example` 为 `.streamlit/secrets.toml` 并填入
-- 云端：在 Streamlit Cloud 的 Secrets 里添加同名 TOML
+应用从 Streamlit Secrets（本地 `.streamlit/secrets.toml` / Streamlit Cloud 的 Secrets）或环境变量读取以下配置：
 
 ```toml
+# 种子账号密码（不写入仓库）
 ADMIN_PASSWORD = "你的管理员密码"
 DEMO_PASSWORD = "你的演示用户密码"
+
+# 可选：托管 PostgreSQL 连接串。配置后改用 PostgreSQL 持久化；不配置则用本地 SQLite。
+DATABASE_URL = "postgresql://user:password@host:5432/dbname"
 ```
+
+种子密码按优先级读取：环境变量 → Streamlit Secrets → 均未配置时随机兜底。想固定密码：本地复制 `.streamlit/secrets.toml.example` 为 `.streamlit/secrets.toml` 填入；云端在 App → ⋮ → Settings → Secrets 里添加同名 TOML。
+
+#### 云端数据库（PostgreSQL / Supabase）
+
+默认使用本地 SQLite（`data/guatfood.db`），适合本地单机。若部署到 Streamlit Cloud，SQLite 会因临时文件系统在重启/重新部署后丢失；此时应配置 `DATABASE_URL` 切换为托管 PostgreSQL：
+
+1. 在 [Supabase](https://supabase.com) 免费建库，Dashboard → Settings → Database → Connection string 复制连接串。
+   - **务必用「Session pooler」那条（端口 5432、IPv4）**，用户名形如 `postgres.<项目ref>`。
+   - 「Direct connection」直连地址 `db.<ref>.supabase.co` 只解析 IPv6，部分网络连不上，别用。
+2. 填入上面的 `DATABASE_URL`（本地 secrets 与 Streamlit Cloud Secrets 都填同一条）。
+3. 首次部署后，运行 `py migrate_to_pg.py` 把本地 SQLite 数据一次性迁移到云端。
 
 ## 排行榜算法
 

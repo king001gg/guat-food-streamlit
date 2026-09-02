@@ -9,8 +9,9 @@ from core import session as sess
 st.set_page_config(page_title="桂航美食推荐排行榜", page_icon="🚀", layout="wide")
 
 # 先把 st.secrets（云端 Secrets / 本地 .streamlit/secrets.toml）注入环境变量：
-# DATABASE_URL 决定数据库后端（PostgreSQL / SQLite），其余供 core.seed 读取种子密码。
-for _key in ("DATABASE_URL", "ADMIN_PASSWORD", "DEMO_PASSWORD"):
+# DATABASE_URL 决定数据库后端（PostgreSQL / SQLite）；ADMIN/DEMO 供 core.seed 读种子密码；
+# SUPABASE_ANON_KEY 供 core.files 把上传图片写到对象存储。
+for _key in ("DATABASE_URL", "ADMIN_PASSWORD", "DEMO_PASSWORD", "SUPABASE_ANON_KEY"):
     if _key in st.secrets:
         os.environ.setdefault(_key, str(st.secrets[_key]))
 db.init_db()

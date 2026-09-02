@@ -11,7 +11,7 @@
 - 📝 投稿审核：普通用户投稿进入「待审核」，管理员直接上架，审核后展示
 - 🔐 登录 / 注册 + 角色权限（普通用户 / 管理员），后台入口仅管理员可见
 - 🛠️ 管理后台：数据概览（ECharts 图表）+ 审核 + 档口 / 菜品 / 食堂 / 用户管理
-- 🖼️ 图片上传：档口封面、菜品图片，本地 `uploads/` 目录
+- 🖼️ 图片上传：档口封面、菜品图片，优先 Supabase Storage（配置 anon key），回退本地 `uploads/` 目录
 - 🚀 航天主题界面：深空星云背景、星空粒子、火箭横幅与页脚（对齐原项目前端）
 
 ## 技术栈
@@ -64,6 +64,9 @@ DEMO_PASSWORD = "你的演示用户密码"
 
 # 可选：托管 PostgreSQL 连接串。配置后改用 PostgreSQL 持久化；不配置则用本地 SQLite。
 DATABASE_URL = "postgresql://user:password@host:5432/dbname"
+
+# 可选：Supabase 匿名 key。配置后上传图片写入对象存储（线上持久、可显示）；不配置则存本地 uploads/。
+SUPABASE_ANON_KEY = "eyJ...anon key..."
 ```
 
 种子密码按优先级读取：环境变量 → Streamlit Secrets → 均未配置时随机兜底。想固定密码：本地复制 `.streamlit/secrets.toml.example` 为 `.streamlit/secrets.toml` 填入；云端在 App → ⋮ → Settings → Secrets 里添加同名 TOML。
@@ -77,6 +80,20 @@ DATABASE_URL = "postgresql://user:password@host:5432/dbname"
    - 「Direct connection」直连地址 `db.<ref>.supabase.co` 只解析 IPv6，部分网络连不上，别用。
 2. 填入上面的 `DATABASE_URL`（本地 secrets 与 Streamlit Cloud Secrets 都填同一条）。
 3. 首次部署后，运行 `py migrate_to_pg.py` 把本地 SQLite 数据一次性迁移到云端。
+
+#### 图片对象存储（Supabase Storage）
+
+图片默认存本地 `uploads/`，但 Streamlit Cloud 的文件系统是临时的，重启后图片会丢、线上也看不到。要让图片在线上持久显示（种子图 + 用户投稿 / 后台新上传图），需把图片放到 Supabase Storage 公开桶：
+
+1. 在 Supabase Dashboard → Storage 建一个 **public** 桶 `food-images`。
+2. 在 Dashboard → SQL Editor 执行两条「匿名」策略（SELECT 供上传流程读取元数据、INSERT 供上传）：
+   ```sql
+   create policy "food_images_anon_select" on storage.objects for select to anon using (bucket_id = 'food-images');
+   create policy "food_images_anon_insert" on storage.objects for insert to anon with check (bucket_id = 'food-images');
+   ```
+3. 在 Secrets 里配置 `SUPABASE_ANON_KEY`（Dashboard → Settings → API → anon）。
+
+> ⚠️ 安全提示：anon key 是公开的，这条策略意味着「知道 anon key 的人都能往你的桶传文件」，适合个人小站。如需更严，请改用 Supabase Auth + 按用户 RLS。
 
 ## 排行榜算法
 

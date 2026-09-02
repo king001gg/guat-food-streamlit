@@ -68,6 +68,13 @@ def set_status(dish_id: int, status: str) -> None:
     )
 
 
+def update(dish_id: int, name: str, description: str, price: float) -> None:
+    db.execute(
+        "UPDATE dish SET name = ?, description = ?, price = ?, updated_at = datetime('now', 'localtime') WHERE id = ?",
+        (name, description, price, dish_id),
+    )
+
+
 def delete(dish_id: int) -> None:
     db.execute("DELETE FROM rating WHERE target_type = 'DISH' AND target_id = ?", (dish_id,))
     db.execute("DELETE FROM like_record WHERE target_type = 'DISH' AND target_id = ?", (dish_id,))

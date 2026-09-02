@@ -128,15 +128,44 @@ with tab_dishes:
         click = st.session_state.get("del_dish_click")
         if click and click.get("row") is not None:
             dishes.delete(rows[click["row"]]["id"])
+            st.rerun()
 
-    st.dataframe(
+    st.caption("直接改「名称 / 价格」单元格，改完点下方「保存修改」")
+    edited = st.data_editor(
         df,
         hide_index=True,
+        num_rows="fixed",
+        disabled=["ID", "食堂", "档口", "状态"],
         column_config={
-            "操作": st.column_config.ButtonColumn("操作", on_click=del_dish, key="del_dish_click"),
+            "名称": st.column_config.TextColumn("名称"),
             "价格": st.column_config.NumberColumn("价格", format="¥%.2f"),
+            "操作": st.column_config.ButtonColumn("操作", on_click=del_dish, key="del_dish_click"),
         },
+        key="dish_editor",
     )
+
+    if st.button("保存修改", width="stretch"):
+        changed = 0
+        for i, r in enumerate(edited.to_dict("records")):
+            if i >= len(rows):
+                break
+            orig = rows[i]
+            new_name = str(r.get("名称") or "").strip()
+            try:
+                new_price = float(r.get("价格"))
+            except (TypeError, ValueError):
+                new_price = orig["price"]
+            if not new_name:
+                st.error(f"第 {i + 1} 行名称为空，跳过")
+                continue
+            if new_name != orig["name"] or new_price != orig["price"]:
+                dishes.update(orig["id"], new_name, orig["description"], new_price)
+                changed += 1
+        if changed:
+            st.toast(f"已保存 {changed} 处修改")
+            st.rerun()
+        else:
+            st.info("没有改动")
 
 with tab_canteens:
     with st.form("add_canteen"):

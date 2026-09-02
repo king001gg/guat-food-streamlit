@@ -25,10 +25,17 @@ def save_image(uploaded) -> str | None:
         return None
 
 
-def resolve_image(relpath: str | None) -> Path | None:
-    """把入库的相对路径解析为绝对路径，供 st.image 使用。"""
+def _is_remote(value: str | None) -> bool:
+    """是否为远程图片地址（公开 URL），无需再解析本地文件。"""
+    return isinstance(value, str) and value.startswith(("http://", "https://"))
+
+
+def resolve_image(relpath: str | None) -> Path | str | None:
+    """把入库的图片值解析为可显示对象：远程 URL 原样返回，本地路径解析为绝对路径。"""
     if not relpath:
         return None
+    if _is_remote(relpath):
+        return relpath
     path = Path(relpath)
     if not path.is_absolute():
         path = db.ROOT / path
@@ -36,7 +43,11 @@ def resolve_image(relpath: str | None) -> Path | None:
 
 
 def image_data_uri(relpath: str | None) -> str | None:
-    """把入库的相对路径转为 base64 data URI，供自定义 HTML <img> 使用。"""
+    """把入库的图片值转为 HTML <img src> 可用值：远程 URL 原样返回，本地路径转 base64 data URI。"""
+    if not relpath:
+        return None
+    if _is_remote(relpath):
+        return relpath
     path = resolve_image(relpath)
     if not path:
         return None

@@ -71,6 +71,13 @@ def create_canteen(name: str, location: str, sort_order: int) -> int:
     return db.execute("INSERT INTO canteen (name, location, sort_order) VALUES (?, ?, ?)", (name, location, sort_order))
 
 
+def update_canteen(canteen_id: int, name: str, location: str, sort_order: int) -> None:
+    db.execute(
+        "UPDATE canteen SET name = ?, location = ?, sort_order = ?, updated_at = datetime('now', 'localtime') WHERE id = ?",
+        (name, location, sort_order, canteen_id),
+    )
+
+
 def delete_canteen(canteen_id: int) -> None:
     from services import windows
 

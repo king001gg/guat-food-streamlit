@@ -81,6 +81,13 @@ def set_status(window_id: int, status: str) -> None:
     )
 
 
+def update(window_id: int, name: str, canteen_id: int, location: str) -> None:
+    db.execute(
+        "UPDATE food_window SET name = ?, canteen_id = ?, location = ?, updated_at = datetime('now', 'localtime') WHERE id = ?",
+        (name, canteen_id, location, window_id),
+    )
+
+
 def delete(window_id: int) -> None:
     for did in [r["id"] for r in db.query("SELECT id FROM dish WHERE window_id = ?", (window_id,))]:
         db.execute("DELETE FROM rating WHERE target_type = 'DISH' AND target_id = ?", (did,))

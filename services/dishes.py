@@ -68,11 +68,17 @@ def set_status(dish_id: int, status: str) -> None:
     )
 
 
-def update(dish_id: int, name: str, description: str, price: float) -> None:
-    db.execute(
-        "UPDATE dish SET name = ?, description = ?, price = ?, updated_at = datetime('now', 'localtime') WHERE id = ?",
-        (name, description, price, dish_id),
-    )
+def update(dish_id: int, name: str, description: str, price: float, window_id: int | None = None) -> None:
+    if window_id is None:
+        db.execute(
+            "UPDATE dish SET name = ?, description = ?, price = ?, updated_at = datetime('now', 'localtime') WHERE id = ?",
+            (name, description, price, dish_id),
+        )
+    else:
+        db.execute(
+            "UPDATE dish SET window_id = ?, name = ?, description = ?, price = ?, updated_at = datetime('now', 'localtime') WHERE id = ?",
+            (window_id, name, description, price, dish_id),
+        )
 
 
 def delete(dish_id: int) -> None:

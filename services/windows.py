@@ -1,6 +1,8 @@
 """档口业务。"""
 from __future__ import annotations
 
+import streamlit as st
+
 from core import db
 from services import rankings
 
@@ -11,6 +13,7 @@ def get_window(window_id: int, increment_view: bool = False) -> dict | None:
     return rankings.get_window_row(window_id)
 
 
+@st.cache_data(ttl=60, show_spinner=False)
 def list_admin() -> list[dict]:
     return db.query(
         """
@@ -21,6 +24,7 @@ def list_admin() -> list[dict]:
     )
 
 
+@st.cache_data(ttl=60, show_spinner=False)
 def list_published(canteen_id: int | None = None) -> list[dict]:
     sql = "SELECT id, name FROM food_window WHERE status = 'PUBLISHED'"
     params: list = []
@@ -31,6 +35,7 @@ def list_published(canteen_id: int | None = None) -> list[dict]:
     return db.query(sql, tuple(params))
 
 
+@st.cache_data(ttl=60, show_spinner=False)
 def pending() -> list[dict]:
     return db.query(
         """
@@ -50,11 +55,13 @@ def create(
     submitter_id: int | None,
     status: str,
 ) -> int:
-    return db.execute(
+    window_id = db.execute(
         "INSERT INTO food_window (canteen_id, submitter_id, name, description, cover_image, location, status) "
         "VALUES (?, ?, ?, ?, ?, ?, ?)",
         (canteen_id, submitter_id, name, description, cover_image, location, status),
     )
+    st.cache_data.clear()
+    return window_id
 
 
 def get_or_create(
@@ -79,6 +86,7 @@ def set_status(window_id: int, status: str) -> None:
         "UPDATE food_window SET status = ?, updated_at = datetime('now', 'localtime') WHERE id = ?",
         (status, window_id),
     )
+    st.cache_data.clear()
 
 
 def update(window_id: int, name: str, canteen_id: int, location: str) -> None:
@@ -86,6 +94,7 @@ def update(window_id: int, name: str, canteen_id: int, location: str) -> None:
         "UPDATE food_window SET name = ?, canteen_id = ?, location = ?, updated_at = datetime('now', 'localtime') WHERE id = ?",
         (name, canteen_id, location, window_id),
     )
+    st.cache_data.clear()
 
 
 def delete(window_id: int) -> None:
@@ -98,3 +107,4 @@ def delete(window_id: int) -> None:
     db.execute("DELETE FROM like_record WHERE target_type = 'WINDOW' AND target_id = ?", (window_id,))
     db.execute("DELETE FROM favorite WHERE target_type = 'WINDOW' AND target_id = ?", (window_id,))
     db.execute("DELETE FROM food_window WHERE id = ?", (window_id,))
+    st.cache_data.clear()

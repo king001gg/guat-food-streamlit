@@ -1,10 +1,13 @@
 """后台统计与用户/食堂管理。"""
 from __future__ import annotations
 
+import streamlit as st
+
 from core import db
 from services import rankings
 
 
+@st.cache_data(ttl=60, show_spinner=False)
 def overview() -> dict:
     def count(sql: str, params: tuple = ()) -> int:
         row = db.query_one(sql, params)
@@ -44,16 +47,19 @@ def overview() -> dict:
     }
 
 
+@st.cache_data(ttl=60, show_spinner=False)
 def list_users() -> list[dict]:
     return db.query("SELECT id, username, nickname, role, status, created_at FROM user ORDER BY id")
 
 
 def set_user_status(user_id: int, status: str) -> None:
     db.execute("UPDATE user SET status = ?, updated_at = datetime('now', 'localtime') WHERE id = ?", (status, user_id))
+    st.cache_data.clear()
 
 
 def set_user_role(user_id: int, role: str) -> None:
     db.execute("UPDATE user SET role = ?, updated_at = datetime('now', 'localtime') WHERE id = ?", (role, user_id))
+    st.cache_data.clear()
 
 
 def delete_user(user_id: int) -> None:
@@ -61,14 +67,18 @@ def delete_user(user_id: int) -> None:
     db.execute("DELETE FROM like_record WHERE user_id = ?", (user_id,))
     db.execute("DELETE FROM favorite WHERE user_id = ?", (user_id,))
     db.execute("DELETE FROM user WHERE id = ?", (user_id,))
+    st.cache_data.clear()
 
 
+@st.cache_data(ttl=60, show_spinner=False)
 def list_canteens() -> list[dict]:
     return db.query("SELECT * FROM canteen ORDER BY sort_order, id")
 
 
 def create_canteen(name: str, location: str, sort_order: int) -> int:
-    return db.execute("INSERT INTO canteen (name, location, sort_order) VALUES (?, ?, ?)", (name, location, sort_order))
+    cid = db.execute("INSERT INTO canteen (name, location, sort_order) VALUES (?, ?, ?)", (name, location, sort_order))
+    st.cache_data.clear()
+    return cid
 
 
 def update_canteen(canteen_id: int, name: str, location: str, sort_order: int) -> None:
@@ -76,6 +86,7 @@ def update_canteen(canteen_id: int, name: str, location: str, sort_order: int) -
         "UPDATE canteen SET name = ?, location = ?, sort_order = ?, updated_at = datetime('now', 'localtime') WHERE id = ?",
         (name, location, sort_order, canteen_id),
     )
+    st.cache_data.clear()
 
 
 def delete_canteen(canteen_id: int) -> None:
@@ -84,3 +95,4 @@ def delete_canteen(canteen_id: int) -> None:
     for wid in [r["id"] for r in db.query("SELECT id FROM food_window WHERE canteen_id = ?", (canteen_id,))]:
         windows.delete(wid)
     db.execute("DELETE FROM canteen WHERE id = ?", (canteen_id,))
+    st.cache_data.clear()

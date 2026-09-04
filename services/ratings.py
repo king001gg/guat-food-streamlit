@@ -1,6 +1,8 @@
 """评分业务。"""
 from __future__ import annotations
 
+import streamlit as st
+
 from core import db
 
 
@@ -26,6 +28,7 @@ def upsert_rating(
         """,
         (user_id, target_type, target_id, taste, value_score, portion, (comment or "").strip()),
     )
+    st.cache_data.clear()
 
 
 def list_ratings(target_type: str, target_id: int) -> list[dict]:
@@ -94,3 +97,4 @@ def my_ratings(user_id: int) -> list[dict]:
 
 def delete_rating(rating_id: int) -> None:
     db.execute("DELETE FROM rating WHERE id = ?", (rating_id,))
+    st.cache_data.clear()

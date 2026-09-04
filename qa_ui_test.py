@@ -4,6 +4,7 @@
 用法：  py qa_ui_test.py
 隔离：  同样把 db.DB_PATH 指向临时文件。
 """
+import os
 import sys
 import tempfile
 from pathlib import Path
@@ -19,6 +20,12 @@ from core import db
 
 _tmpdir = tempfile.mkdtemp(prefix="guat_qa_ui_")
 db.DB_PATH = Path(_tmpdir) / "test.db"
+
+# 隔离本地 .streamlit/secrets.toml：AppTest 跑 app.py 时会读取 secrets 并把值写回 os.environ
+# （st.secrets[key] 一旦被访问就会导出全部 secrets），导致后端切到 PostgreSQL、脱离本测试的
+# 临时 SQLite。把四个 secret key 都置空，让 app.py 完全跳过 secrets 注入，保持 SQLite 后端。
+for _key in ("DATABASE_URL", "ADMIN_PASSWORD", "DEMO_PASSWORD", "SUPABASE_ANON_KEY"):
+    os.environ[_key] = ""
 
 db.init_db()
 from core import seed

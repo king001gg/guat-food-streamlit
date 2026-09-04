@@ -12,8 +12,10 @@ st.set_page_config(page_title="桂航美食推荐排行榜", page_icon="🚀", l
 # DATABASE_URL 决定数据库后端（PostgreSQL / SQLite）；ADMIN/DEMO 供 core.seed 读种子密码；
 # SUPABASE_ANON_KEY 供 core.files 把上传图片写到对象存储。
 for _key in ("DATABASE_URL", "ADMIN_PASSWORD", "DEMO_PASSWORD", "SUPABASE_ANON_KEY"):
-    if _key in st.secrets:
-        os.environ.setdefault(_key, str(st.secrets[_key]))
+    # 先查环境变量再读 secrets：读取 st.secrets[key] 会回写 os.environ，
+    # 若先读再 setdefault 会把已存在（含空串占位）的变量覆盖掉。
+    if _key not in os.environ and _key in st.secrets:
+        os.environ[_key] = str(st.secrets[_key])
 db.init_db()
 seed.seed_if_empty()
 sess.init_session()

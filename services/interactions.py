@@ -1,6 +1,8 @@
 """点赞与收藏（toggle 语义）。"""
 from __future__ import annotations
 
+import streamlit as st
+
 from core import db
 
 
@@ -12,11 +14,13 @@ def _toggle(table: str, user_id: int, target_type: str, target_id: int) -> bool:
     )
     if existing:
         db.execute(f"DELETE FROM {table} WHERE id = ?", (existing["id"],))
+        st.cache_data.clear()
         return False
     db.execute(
         f"INSERT INTO {table} (user_id, target_type, target_id) VALUES (?, ?, ?)",
         (user_id, target_type, target_id),
     )
+    st.cache_data.clear()
     return True
 
 

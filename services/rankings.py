@@ -1,6 +1,8 @@
 """榜单聚合与排序：SQL 聚合 + 算法排序，供首页与后台使用。"""
 from __future__ import annotations
 
+import streamlit as st
+
 from core import db
 from core.algorithms import RANKERS, compute_heat
 
@@ -59,6 +61,7 @@ def _postprocess(rows: list[dict]) -> list[dict]:
     return rows
 
 
+@st.cache_data(ttl=60, show_spinner=False)
 def get_rankings(
     target_type: str,
     rank_type: str = "overall",

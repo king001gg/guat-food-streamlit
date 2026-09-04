@@ -1,6 +1,8 @@
 """菜品业务。"""
 from __future__ import annotations
 
+import streamlit as st
+
 from core import db
 from services import rankings
 
@@ -11,6 +13,7 @@ def get_dish(dish_id: int, increment_view: bool = False) -> dict | None:
     return rankings.get_dish_row(dish_id)
 
 
+@st.cache_data(ttl=60, show_spinner=False)
 def list_admin() -> list[dict]:
     return db.query(
         """
@@ -23,6 +26,7 @@ def list_admin() -> list[dict]:
     )
 
 
+@st.cache_data(ttl=60, show_spinner=False)
 def list_published(window_id: int | None = None) -> list[dict]:
     sql = "SELECT id, name FROM dish WHERE status = 'PUBLISHED'"
     params: list = []
@@ -33,6 +37,7 @@ def list_published(window_id: int | None = None) -> list[dict]:
     return db.query(sql, tuple(params))
 
 
+@st.cache_data(ttl=60, show_spinner=False)
 def pending() -> list[dict]:
     return db.query(
         """
@@ -54,11 +59,13 @@ def create(
     submitter_id: int | None,
     status: str,
 ) -> int:
-    return db.execute(
+    dish_id = db.execute(
         "INSERT INTO dish (window_id, submitter_id, name, description, image, price, status) "
         "VALUES (?, ?, ?, ?, ?, ?, ?)",
         (window_id, submitter_id, name, description, image, price, status),
     )
+    st.cache_data.clear()
+    return dish_id
 
 
 def set_status(dish_id: int, status: str) -> None:
@@ -66,6 +73,7 @@ def set_status(dish_id: int, status: str) -> None:
         "UPDATE dish SET status = ?, updated_at = datetime('now', 'localtime') WHERE id = ?",
         (status, dish_id),
     )
+    st.cache_data.clear()
 
 
 def update(dish_id: int, name: str, description: str, price: float, window_id: int | None = None) -> None:
@@ -79,6 +87,7 @@ def update(dish_id: int, name: str, description: str, price: float, window_id: i
             "UPDATE dish SET window_id = ?, name = ?, description = ?, price = ?, updated_at = datetime('now', 'localtime') WHERE id = ?",
             (window_id, name, description, price, dish_id),
         )
+    st.cache_data.clear()
 
 
 def delete(dish_id: int) -> None:
@@ -86,3 +95,4 @@ def delete(dish_id: int) -> None:
     db.execute("DELETE FROM like_record WHERE target_type = 'DISH' AND target_id = ?", (dish_id,))
     db.execute("DELETE FROM favorite WHERE target_type = 'DISH' AND target_id = ?", (dish_id,))
     db.execute("DELETE FROM dish WHERE id = ?", (dish_id,))
+    st.cache_data.clear()

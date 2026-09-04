@@ -1,4 +1,4 @@
-"""榜单首页：档口 / 菜品两级榜单，4 种维度，筛选 + 搜索 + 可视化。"""
+"""榜单首页：菜品 / 档口两级榜单，4 种维度，筛选 + 搜索 + 可视化。"""
 import streamlit as st
 
 from core import charts, files, ui
@@ -15,9 +15,9 @@ METRIC = {"overall": "score_avg", "taste": "taste_avg", "heat": "heat", "recent"
 
 target_type = st.segmented_control(
     "榜单类型",
-    ["WINDOW", "DISH"],
+    ["DISH", "WINDOW"],
     format_func=lambda v: TARGET_LABELS[v],
-    default="WINDOW",
+    default="DISH",
 )
 rank_type = st.segmented_control(
     "榜单维度",

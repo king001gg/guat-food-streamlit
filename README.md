@@ -20,7 +20,7 @@
 |---|---|
 | 框架 | Streamlit（多页面 + session_state） |
 | 数据库 | SQLite（标准库 sqlite3，单文件 `data/guatfood.db`） |
-| 图表 | ECharts（`st.iframe` + CDN，`core/charts.py`） |
+| 图表 | ECharts（`st.iframe` + 内置 `static/echarts.min.js`，`core/charts.py`） |
 | 密码 | bcrypt |
 | 图片 | Pillow |
 | 数据中间层 | pandas |

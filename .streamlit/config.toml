@@ -8,3 +8,7 @@ textColor = "#e6eefb"
 borderColor = "#2a4a7f"
 
 chartCategoricalColors = ["#4da3ff", "#ff9f43", "#f6b93b", "#3ddc97", "#e74c3c", "#9ecbff", "#8b5cf6", "#14b8a6"]
+
+[server]
+# 图表依赖 static/ 下的 ECharts；该开关默认 False，需显式开启否则路由不注册。
+enableStaticServing = true

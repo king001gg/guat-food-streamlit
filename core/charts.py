@@ -1,10 +1,11 @@
 """ECharts 图表封装。
 
 Streamlit 1.60 不再兼容老旧的 ``streamlit-echarts`` 组件（其 file-backed JS 声明方式
-已被禁止），因此这里改用 ``st.iframe`` 内嵌一段自包含 HTML，通过 CDN 加载 ECharts 渲染。
+已被禁止），因此这里改用 ``st.iframe`` 内嵌一段自包含 HTML 渲染图表。
 图表本身是静态 SVG/Canvas，页面侧的筛选、跳转等交互仍由 Streamlit 原生控件完成。
 
-注意：图表渲染依赖联网加载 ECharts（jsDelivr CDN）。
+ECharts 由仓库内 ``static/echarts.min.js`` 经 Streamlit 静态文件服务提供，不依赖外部
+CDN：jsDelivr 等常见 CDN 在国内网络经常不可达，会把图表整个打不出来。
 """
 from __future__ import annotations
 
@@ -20,7 +21,10 @@ PALETTE = [
 TEXT_COLOR = "#e6eefb"  # 深空底上的浅色文字
 AXIS_LINE = "#33507f"
 SPLIT_LINE = "rgba(255, 255, 255, 0.06)"
-_CDN = "https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"
+# Streamlit 把 app.py 同级的 static/ 挂在 <baseUrlPath>/app/static/ 下：云端会带
+# base path 前缀，本地为空。srcdoc iframe 与父页面同源，document.baseURI 继承父页面
+# 地址，据此在运行时拼出静态地址；再回退根路径兜底，避免写死任何一种部署形态。
+_ASSET_PATH = "app/static/echarts.min.js"
 
 
 def _render(option: dict, height: int) -> None:
@@ -30,12 +34,22 @@ def _render(option: dict, height: int) -> None:
         "<!DOCTYPE html><html><head><meta charset='utf-8'></head>"
         "<body style='margin:0;'>"
         f"<div id='chart' style='width:100%;height:{height}px;'></div>"
-        f"<script src='{_CDN}'></script>"
         "<script>"
+        # 去掉 baseURI 末尾的路径段（可能是页面名），得到应用根目录，再拼静态资源
+        "const dir=document.baseURI.replace(/[^/]*$/,'');"
+        f"const urls=[dir+{json.dumps(_ASSET_PATH)},'/{_ASSET_PATH}'];"
         "const el=document.getElementById('chart');"
-        "if(window.echarts){const c=echarts.init(el);c.setOption(" + payload + ");"
-        "window.addEventListener('resize',()=>c.resize());}"
-        "else{el.innerHTML='<p style=\"padding:12px;color:#999;\">图表加载失败（需联网加载 ECharts）</p>';}"
+        "const draw=()=>{const c=echarts.init(el);c.setOption(" + payload + ");"
+        "window.addEventListener('resize',()=>c.resize());};"
+        # 依次尝试候选地址；全部失败才提示，避免单一部署形态猜错就白屏
+        "const fail=(i)=>{"
+        "if(i>=urls.length){el.innerHTML='<p style=\"padding:12px;color:#999;\">"
+        "图表加载失败（ECharts 静态资源未就绪）</p>';return;}"
+        "const s=document.createElement('script');s.src=urls[i];"
+        "s.onload=()=>{window.echarts?draw():fail(i+1);};"
+        "s.onerror=()=>fail(i+1);"
+        "document.head.appendChild(s);};"
+        "fail(0);"
         "</script></body></html>"
     )
     st.iframe(html, height=height)
